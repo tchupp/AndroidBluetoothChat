@@ -12,5 +12,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         Button scanButton = (Button) findViewById(R.id.scanButton);
+
+        //b commited, b b commited
     }
 }
