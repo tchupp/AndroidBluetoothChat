@@ -13,6 +13,6 @@ public class MainActivity extends AppCompatActivity {
 
         Button scanButton = (Button) findViewById(R.id.scanButton);
 
-        //b commited, b b commited
+        //b committed, b b committed
     }
 }
