@@ -1,8 +1,8 @@
 package edu.msu.team15.androidbluetoothchat;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.widget.Button;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -10,9 +10,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+    }
 
-        Button scanButton = (Button) findViewById(R.id.scanButton);
-
-        //b committed, b b committed
+    public void onScanForDevices(View view) {
+        LoadingDevicesDialog loadingDevicesDialog = new LoadingDevicesDialog();
+        loadingDevicesDialog.show(getFragmentManager(), "loadingDevices");
     }
 }

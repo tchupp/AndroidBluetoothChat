@@ -15,5 +15,6 @@
         android:text="Scan for devices"
         android:id="@+id/scanButton"
         android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:onClick="onScanForDevices" />
 </RelativeLayout>
