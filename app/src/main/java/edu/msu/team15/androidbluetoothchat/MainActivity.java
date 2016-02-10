@@ -6,6 +6,33 @@ import android.widget.Button;
 
 public class MainActivity extends AppCompatActivity {
 
+    public String bluetoothStatus;
+    public String deviceName;
+    public String bluetootherAddress;
+    public String messageSent;
+
+    public String getMessageReceived() {
+        return messageReceived;
+    }
+
+    public String messageReceived;
+
+    public String getMessageSent() {
+        return messageSent;
+    }
+
+    public void setBluetoothStatus(String bluetoothStatus) {
+        this.bluetoothStatus = bluetoothStatus;
+    }
+
+    public void setDeviceName(String deviceName) {
+        this.deviceName = deviceName;
+    }
+
+    public void setBluetootherAddress(String bluetootherAddress) {
+        this.bluetootherAddress = bluetootherAddress;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -15,4 +42,7 @@ public class MainActivity extends AppCompatActivity {
 
         //b committed, b b committed
     }
+
+
+
 }
