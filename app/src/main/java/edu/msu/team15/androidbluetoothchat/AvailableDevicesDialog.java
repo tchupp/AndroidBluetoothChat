@@ -6,7 +6,7 @@ import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
 
-public class LoadingDevicesDialog extends DialogFragment {
+public class AvailableDevicesDialog extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle bundle) {

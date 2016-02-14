@@ -40,10 +40,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onScanForDevices(View view) {
-        LoadingDevicesDialog loadingDevicesDialog = new LoadingDevicesDialog();
-        loadingDevicesDialog.show(getFragmentManager(), "loadingDevices");
+        AvailableDevicesDialog availableDevicesDialog = new AvailableDevicesDialog();
+        availableDevicesDialog.show(getFragmentManager(), "loadingDevices");
     }
-
-
-
 }
