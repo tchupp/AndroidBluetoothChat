@@ -1,10 +1,12 @@
 package edu.msu.team15.androidbluetoothchat;
 
+import android.view.LayoutInflater;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +57,15 @@ public class Cloud {
 
         @Override
         public View getView(int position, View view, ViewGroup parent) {
-            // TODO draw the available device list
+            if (view == null) {
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.device_item, parent, false);
+            }
+
+            TextView textDeviceName = (TextView) view.findViewById(R.id.textDeviceName);
+            TextView textDeviceAddress = (TextView) view.findViewById(R.id.textDeviceAddress);
+            textDeviceName.setText(devices.get(position).name);
+            textDeviceAddress.setText(devices.get(position).address);
+
             return view;
         }
 
