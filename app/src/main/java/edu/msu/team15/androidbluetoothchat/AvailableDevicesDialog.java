@@ -4,26 +4,27 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ListView;
 
 public class AvailableDevicesDialog extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle bundle) {
+        final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
         builder.setTitle("Scanning for devices");
-
-        builder.setNegativeButton(android.R.string.cancel,
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-                    }
-                });
+        builder.setCancelable(false);
 
         // Get the layout inflater
         LayoutInflater inflater = getActivity().getLayoutInflater();
@@ -32,6 +33,42 @@ public class AvailableDevicesDialog extends DialogFragment {
         View view = inflater.inflate(R.layout.devices_catalog, null);
         builder.setView(view);
 
-        return builder.create();
+        builder.setNegativeButton(android.R.string.cancel,
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        bluetoothAdapter.cancelDiscovery();
+                        Log.d("ABC", "Bluetooth is discovering: " + bluetoothAdapter.isDiscovering());
+                    }
+                });
+
+        AlertDialog dialog = builder.create();
+
+        ListView list = (ListView) view.findViewById(R.id.listDevices);
+
+        Cloud.AvailableDeviceAdapter adapter = new Cloud.AvailableDeviceAdapter(list, bluetoothAdapter);
+        final Cloud.AvailableDeviceReceiver availableDeviceReceiver = new Cloud.AvailableDeviceReceiver(adapter);
+
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        getActivity().registerReceiver(availableDeviceReceiver, filter);
+        Log.d("ABC", "Registered Receiver to activity");
+        Log.d("ABC", "Bluetooth is enabled: " + bluetoothAdapter.isEnabled());
+        Log.d("ABC", "Bluetooth is discovering: " + bluetoothAdapter.isDiscovering());
+
+        list.setAdapter(adapter);
+
+        list.setOnItemClickListener(new ListView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                bluetoothAdapter.cancelDiscovery();
+                getActivity().unregisterReceiver(availableDeviceReceiver);
+                Log.d("ABC", "Unregistered Receiver from activity");
+
+                // TODO connect to device
+            }
+        });
+
+        return dialog;
     }
 }
