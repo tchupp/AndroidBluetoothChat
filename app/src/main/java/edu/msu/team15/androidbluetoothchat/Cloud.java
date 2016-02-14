@@ -1,8 +1,12 @@
 package edu.msu.team15.androidbluetoothchat;
 
-import android.view.LayoutInflater;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -17,26 +21,42 @@ public class Cloud {
     private static class DeviceInfo {
         public String name;
         public String address;
-        public boolean connected;
+        public boolean connected = false;
 
-        public DeviceInfo(String address, String name, boolean connected) {
+        public DeviceInfo(String address, String name) {
             this.address = address;
             this.name = name;
-            this.connected = connected;
         }
     }
 
     public static class AvailableDeviceAdapter extends BaseAdapter {
-
+        private final View view;
+        private final BluetoothAdapter bluetoothAdapter;
         private List<DeviceInfo> devices = new ArrayList<>();
 
-        public AvailableDeviceAdapter(final View view) {
+        public AvailableDeviceAdapter(final View view, BluetoothAdapter bluetoothAdapter) {
+            this.view = view;
+            this.bluetoothAdapter = bluetoothAdapter;
+
+            this.bluetoothAdapter.startDiscovery();
+
             new Thread(new Runnable() {
+
                 @Override
                 public void run() {
-                    devices = getAvailableDevices();
-                }
+                    Set<BluetoothDevice> bondedDevices = AvailableDeviceAdapter.this.bluetoothAdapter.getBondedDevices();
+                    for (BluetoothDevice device : bondedDevices) {
+                        AvailableDeviceAdapter.this.devices.add(new DeviceInfo(device.getName(), device.getAddress()));
+                    }
 
+                    view.post(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            notifyDataSetChanged();
+                        }
+                    });
+                }
             }).start();
         }
 
@@ -69,18 +89,37 @@ public class Cloud {
             return view;
         }
 
-        private List<DeviceInfo> getAvailableDevices() {
-            ArrayList<DeviceInfo> list = new ArrayList<>();
+        public void addDevice(DeviceInfo deviceInfo) {
+            this.devices.add(deviceInfo);
 
-            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();
+            this.view.post(new Runnable() {
 
-            for (BluetoothDevice device : bondedDevices) {
-                list.add(new DeviceInfo(device.getName(), device.getAddress(), false));
-            }
-
-            return list;
+                @Override
+                public void run() {
+                    notifyDataSetChanged();
+                }
+            });
         }
     }
 
+    public static class AvailableDeviceReceiver extends BroadcastReceiver {
+
+        private AvailableDeviceAdapter adapter;
+
+        public AvailableDeviceReceiver(AvailableDeviceAdapter adapter) {
+            this.adapter = adapter;
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            Log.d("ABC", "action received");
+
+            if (action.equals(BluetoothDevice.ACTION_FOUND)) {
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                Log.d("ABC", "found device: " + device.getAddress());
+                this.adapter.addDevice(new DeviceInfo(device.getName(), device.getAddress()));
+            }
+        }
+    }
 }
