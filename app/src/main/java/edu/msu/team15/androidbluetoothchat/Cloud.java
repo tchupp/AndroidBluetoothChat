@@ -23,7 +23,7 @@ public class Cloud {
         public String address;
         public boolean connected = false;
 
-        public DeviceInfo(String address, String name) {
+        public DeviceInfo(String name, String address) {
             this.address = address;
             this.name = name;
         }
