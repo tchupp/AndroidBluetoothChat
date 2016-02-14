@@ -8,7 +8,7 @@ public class MainActivity extends AppCompatActivity {
 
     public String bluetoothStatus;
     public String deviceName;
-    public String bluetootherAddress;
+    public String bluetoothAddress;
     public String messageSent;
 
     public String getMessageReceived() {
@@ -29,8 +29,8 @@ public class MainActivity extends AppCompatActivity {
         this.deviceName = deviceName;
     }
 
-    public void setBluetootherAddress(String bluetootherAddress) {
-        this.bluetootherAddress = bluetootherAddress;
+    public void setBluetoothAddress(String bluetoothAddress) {
+        this.bluetoothAddress = bluetoothAddress;
     }
 
     @Override
@@ -42,6 +42,10 @@ public class MainActivity extends AppCompatActivity {
     public void onScanForDevices(View view) {
         LoadingDevicesDialog loadingDevicesDialog = new LoadingDevicesDialog();
         loadingDevicesDialog.show(getFragmentManager(), "loadingDevices");
+    }
+
+    public void onSendMessage(View view) {
+
     }
 
 
