@@ -16,6 +16,13 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 public class AvailableDevicesDialog extends DialogFragment {
+    private Cloud.AvailableDeviceReceiver availableDeviceReceiver;
+
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        super.onDismiss(dialog);
+        getActivity().unregisterReceiver(availableDeviceReceiver);
+    }
 
     @Override
     public Dialog onCreateDialog(Bundle bundle) {
@@ -47,7 +54,7 @@ public class AvailableDevicesDialog extends DialogFragment {
         ListView list = (ListView) view.findViewById(R.id.listDevices);
 
         Cloud.AvailableDeviceAdapter adapter = new Cloud.AvailableDeviceAdapter(list, bluetoothAdapter);
-        final Cloud.AvailableDeviceReceiver availableDeviceReceiver = new Cloud.AvailableDeviceReceiver(adapter);
+        availableDeviceReceiver = new Cloud.AvailableDeviceReceiver(adapter);
 
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         getActivity().registerReceiver(availableDeviceReceiver, filter);
