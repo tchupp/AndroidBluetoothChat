@@ -28,6 +28,9 @@ public class AvailableDevicesDialog extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle bundle) {
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        final Cloud cloud = new Cloud();
+        final Cloud.ConnectThread connectThread = new Cloud.ConnectThread();
+
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
@@ -73,6 +76,11 @@ public class AvailableDevicesDialog extends DialogFragment {
 
                 // TODO close dialog
                 // TODO connect to device
+
+
+
+                connectThread.connect();
+
             }
         });
 

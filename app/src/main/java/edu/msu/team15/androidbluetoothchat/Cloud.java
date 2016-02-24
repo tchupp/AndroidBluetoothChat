@@ -14,8 +14,11 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -215,6 +218,17 @@ public class Cloud {
 
         public void sendData(BluetoothSocket bluetoothSocket, int data) throws IOException {
             ByteArrayOutputStream output = new ByteArrayOutputStream(4);
+            output.write(data);
+            OutputStream outputStream = bluetoothSocket.getOutputStream();
+            outputStream.write(output.toByteArray());
+        }
+
+        public int receiveData(BluetoothSocket bluetoothSocket) throws IOException{
+            byte[] buffer = new byte[4];
+            ByteArrayInputStream input = new ByteArrayInputStream(buffer);
+            InputStream inputStream = bluetoothSocket.getInputStream();
+            inputStream.read(buffer);
+            return input.read();
         }
     }
 }
