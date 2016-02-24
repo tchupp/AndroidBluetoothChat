@@ -28,9 +28,6 @@ public class AvailableDevicesDialog extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle bundle) {
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        final Cloud cloud = new Cloud();
-        final Cloud.ConnectThread connectThread = new Cloud.ConnectThread();
-
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
@@ -57,7 +54,7 @@ public class AvailableDevicesDialog extends DialogFragment {
 
         ListView list = (ListView) view.findViewById(R.id.listDevices);
 
-        Cloud.AvailableDeviceAdapter adapter = new Cloud.AvailableDeviceAdapter(list, bluetoothAdapter);
+        final Cloud.AvailableDeviceAdapter adapter = new Cloud.AvailableDeviceAdapter(list, bluetoothAdapter);
         availableDeviceReceiver = new Cloud.AvailableDeviceReceiver(adapter);
 
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
@@ -76,11 +73,7 @@ public class AvailableDevicesDialog extends DialogFragment {
 
                 // TODO close dialog
                 // TODO connect to device
-
-
-
-                //connectThread.connect();
-
+                BluetoothDevice device = adapter.getDevice(position);
             }
         });
 

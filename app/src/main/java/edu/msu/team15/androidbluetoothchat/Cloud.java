@@ -14,17 +14,21 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 public class Cloud {
+
+    private static String ABC_NAME = "AndroidBluetoothChat";
+    private static UUID ABC_UUID = new UUID(1625435424, 547981287);
 
     private static class DeviceInfo {
         public String name;
@@ -40,12 +44,13 @@ public class Cloud {
     public static class AvailableDeviceAdapter extends BaseAdapter {
         private final View view;
         private final BluetoothAdapter bluetoothAdapter;
-        private List<DeviceInfo> devices = new ArrayList<>();
+        private List<DeviceInfo> bluetoothDeviceInfo = new ArrayList<>();
+        private Map<String, BluetoothDevice> bluetoothDeviceMap = new HashMap<>();
+
 
         public AvailableDeviceAdapter(final View view, BluetoothAdapter bluetoothAdapter) {
             this.view = view;
             this.bluetoothAdapter = bluetoothAdapter;
-
             this.bluetoothAdapter.startDiscovery();
 
             new Thread(new Runnable() {
@@ -54,7 +59,7 @@ public class Cloud {
                 public void run() {
                     Set<BluetoothDevice> bondedDevices = AvailableDeviceAdapter.this.bluetoothAdapter.getBondedDevices();
                     for (BluetoothDevice device : bondedDevices) {
-                        AvailableDeviceAdapter.this.devices.add(new DeviceInfo(device.getName(), device.getAddress()));
+                        AvailableDeviceAdapter.this.bluetoothDeviceInfo.add(new DeviceInfo(device.getName(), device.getAddress()));
                     }
 
                     view.post(new Runnable() {
@@ -70,12 +75,12 @@ public class Cloud {
 
         @Override
         public int getCount() {
-            return this.devices.size();
+            return this.bluetoothDeviceInfo.size();
         }
 
         @Override
         public Object getItem(int position) {
-            return this.devices.get(position);
+            return this.bluetoothDeviceInfo.get(position);
         }
 
         @Override
@@ -91,14 +96,20 @@ public class Cloud {
 
             TextView textDeviceName = (TextView) view.findViewById(R.id.textDeviceName);
             TextView textDeviceAddress = (TextView) view.findViewById(R.id.textDeviceAddress);
-            textDeviceName.setText(devices.get(position).name);
-            textDeviceAddress.setText(devices.get(position).address);
+            textDeviceName.setText(bluetoothDeviceInfo.get(position).name);
+            textDeviceAddress.setText(bluetoothDeviceInfo.get(position).address);
 
             return view;
         }
 
-        public void addDevice(DeviceInfo deviceInfo) {
-            this.devices.add(deviceInfo);
+        public BluetoothDevice getDevice(int position) {
+            String address = this.bluetoothDeviceInfo.get(position).address;
+            return this.bluetoothDeviceMap.get(address);
+        }
+
+        public void addDevice(BluetoothDevice device) {
+            this.bluetoothDeviceInfo.add(new DeviceInfo(device.getName(), device.getAddress()));
+            this.bluetoothDeviceMap.put(device.getAddress(), device);
 
             this.view.post(new Runnable() {
 
@@ -126,7 +137,7 @@ public class Cloud {
             if (action.equals(BluetoothDevice.ACTION_FOUND)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 Log.d("ABC", "found device: " + device.getAddress());
-                this.adapter.addDevice(new DeviceInfo(device.getName(), device.getAddress()));
+                this.adapter.addDevice(device);
             }
         }
     }
@@ -134,101 +145,133 @@ public class Cloud {
     public static class ConnectThread extends Thread {
         private BluetoothSocket bluetoothSocket;
 
-        public boolean connect(BluetoothDevice bluetoothDevice, UUID uuid) {
-            BluetoothSocket temp = null;
-
+        public ConnectThread(BluetoothDevice bluetoothDevice) {
             try {
-                temp = bluetoothDevice.createRfcommSocketToServiceRecord(uuid);
+                this.bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(Cloud.ABC_UUID);
             } catch (IOException e) {
-                Log.d("CONNECTTHREAD", "Could not create RFCOMM socket:" + e.toString());
-                return false;
+                // TODO remove print stack
+                e.printStackTrace();
             }
-            try {
-                bluetoothSocket.connect();
-            } catch (IOException e) {
-                Log.d("CONNECTTHREAD", "Could not connect: " + e.toString());
-                try {
-                    bluetoothSocket.close();
-                } catch (IOException close) {
-                    Log.d("CONNECTTHREAD", "Could not close connection:" + e.toString());
-                    return false;
-                }
-            }
-            return true;
         }
 
-        public boolean cancel() {
+        @Override
+        public void run() {
             try {
-                bluetoothSocket.close();
-            } catch (IOException close) {
-                Log.d("CONNECTTHREAD","Could not close connection:" + close.toString());
-                return false;
+                this.bluetoothSocket.connect();
+            } catch (IOException e) {
+                // TODO remove print stack
+                e.printStackTrace();
+
+                try {
+                    this.bluetoothSocket.close();
+                } catch (IOException e1) {
+                    // TODO remove print stack
+                    e1.printStackTrace();
+                }
             }
-            return true;
+        }
+
+        public void cancel() {
+            try {
+                this.bluetoothSocket.close();
+            } catch (IOException e) {
+                // TODO remove print stack
+                e.printStackTrace();
+            }
         }
     }
 
-    public static class ServerConnectThread extends Thread {
-        private BluetoothSocket bluetoothSocket;
+    public static class AcceptThread extends Thread {
+        private BluetoothServerSocket bluetoothServerSocket;
 
-        public ServerConnectThread() { }
-
-        public void acceptConnect(BluetoothAdapter bluetoothAdapter, UUID uuid) {
-            BluetoothServerSocket temp = null;
-
+        public AcceptThread(BluetoothAdapter bluetoothAdapter) {
             try {
-                temp = bluetoothAdapter.listenUsingRfcommWithServiceRecord("Service_Name", uuid);
+                this.bluetoothServerSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord(Cloud.ABC_NAME, Cloud.ABC_UUID);
             } catch (IOException e) {
-                Log.d("SERVERCONNECT", "Could not get a BluetoothServerSocket:" + e.toString());
+                // TODO remove print stack
+                e.printStackTrace();
             }
+        }
+
+        @Override
+        public void run() {
+            BluetoothSocket bluetoothSocket;
+
             while (true) {
                 try {
-                    if (temp != null) {
-                        bluetoothSocket = temp.accept();
-                    }
-                    else {
-                        Log.d("SERVERCONNECT", "temp is null");
-                    }
+                    bluetoothSocket = bluetoothServerSocket.accept();
                 } catch (IOException e) {
-                    Log.d("SERVERCONNECT", "Could not accept an incoming connection.");
+                    // TODO remove print stack
+                    e.printStackTrace();
                     break;
                 }
-                if (bluetoothSocket != null) {
-                    try {
-                        temp.close();
-                    } catch (IOException e) {
-                        Log.d("SERVERCONNECT", "Could not close ServerSocket:" + e.toString());
-                    }
-                    break;
-                }
+                Log.i("Accept Thread", "" + String.valueOf(bluetoothSocket.isConnected()));
+                Log.i("Accept Thread", "" + String.valueOf(bluetoothSocket.getRemoteDevice()));
             }
         }
 
-        public void closeConnect() {
+        public void cancel() {
             try {
-                bluetoothSocket.close();
+                this.bluetoothServerSocket.close();
             } catch (IOException e) {
-
+                // TODO remove print stack
+                e.printStackTrace();
             }
         }
     }
 
-    public static class ManageConnectThread extends Thread {
-        public ManageConnectThread() { }
+    public static class ConnectedThread extends Thread {
+        private BluetoothSocket bluetoothSocket;
+        private InputStream inputStream;
+        private OutputStream outputStream;
 
-        public void sendData(BluetoothSocket bluetoothSocket, int data) throws IOException {
-            ByteArrayOutputStream output = new ByteArrayOutputStream(4);
-            output.write(data);
-            OutputStream outputStream = bluetoothSocket.getOutputStream();
-            outputStream.write(output.toByteArray());
+        public ConnectedThread(BluetoothSocket bluetoothSocket) {
+            this.bluetoothSocket = bluetoothSocket;
+
+            try {
+                inputStream = bluetoothSocket.getInputStream();
+                outputStream = bluetoothSocket.getOutputStream();
+            } catch (IOException e) {
+                // TODO remove print stack
+                e.printStackTrace();
+            }
         }
 
-        public int receiveData(BluetoothSocket bluetoothSocket) throws IOException{
-            byte[] buffer = new byte[4];
-            ByteArrayInputStream input = new ByteArrayInputStream(buffer);
-            InputStream inputStream = bluetoothSocket.getInputStream();
-            inputStream.read(buffer);
-            return input.read();
+        @Override
+        public void run() {
+            Log.i("ABC", "ConnectedThread started");
+            byte[] buffer = new byte[1024];
+            int bytes;
+
+            while (true) {
+                try {
+                    bytes = this.inputStream.read(buffer);
+                    Log.i("RECEIVED MESSAGE LENGTH", String.valueOf(bytes));
+                    Log.i("RECEIVED MESSAGE IS", Arrays.toString(buffer));
+                } catch (IOException e) {
+                    // TODO remove print stack
+                    e.printStackTrace();
+                    break;
+                }
+            }
+        }
+
+        public void write(byte[] message) {
+            try {
+                this.outputStream.write(message);
+            } catch (IOException e) {
+                // TODO remove print stack
+                e.printStackTrace();
+            }
+        }
+
+        public void cancel() {
+            try {
+                this.bluetoothSocket.close();
+            } catch (IOException e) {
+                // TODO remove print stack
+                e.printStackTrace();
+            }
         }
     }
 }
