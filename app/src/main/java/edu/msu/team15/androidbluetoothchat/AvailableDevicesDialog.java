@@ -22,6 +22,7 @@ public class AvailableDevicesDialog extends DialogFragment {
     public void onDismiss(DialogInterface dialog) {
         super.onDismiss(dialog);
         getActivity().unregisterReceiver(availableDeviceReceiver);
+        Log.d("ABC", "Unregistered Receiver from activity");
     }
 
     @Override
@@ -69,9 +70,8 @@ public class AvailableDevicesDialog extends DialogFragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 bluetoothAdapter.cancelDiscovery();
-                getActivity().unregisterReceiver(availableDeviceReceiver);
-                Log.d("ABC", "Unregistered Receiver from activity");
 
+                // TODO close dialog
                 // TODO connect to device
             }
         });

@@ -67,4 +67,7 @@ public class MainActivity extends AppCompatActivity {
         AvailableDevicesDialog availableDevicesDialog = new AvailableDevicesDialog();
         availableDevicesDialog.show(getFragmentManager(), "loadingDevices");
     }
+
+    public void onSendMessage(View view) {
+    }
 }
