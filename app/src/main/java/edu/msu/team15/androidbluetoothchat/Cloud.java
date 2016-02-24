@@ -2,6 +2,8 @@ package edu.msu.team15.androidbluetoothchat;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -12,9 +14,12 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 public class Cloud {
 
@@ -120,6 +125,96 @@ public class Cloud {
                 Log.d("ABC", "found device: " + device.getAddress());
                 this.adapter.addDevice(new DeviceInfo(device.getName(), device.getAddress()));
             }
+        }
+    }
+
+    public static class ConnectThread extends Thread {
+        private BluetoothSocket bluetoothSocket;
+
+        public boolean connect(BluetoothDevice bluetoothDevice, UUID uuid) {
+            BluetoothSocket temp = null;
+
+            try {
+                temp = bluetoothDevice.createRfcommSocketToServiceRecord(uuid);
+            } catch (IOException e) {
+                Log.d("CONNECTTHREAD", "Could not create RFCOMM socket:" + e.toString());
+                return false;
+            }
+            try {
+                bluetoothSocket.connect();
+            } catch (IOException e) {
+                Log.d("CONNECTTHREAD", "Could not connect: " + e.toString());
+                try {
+                    bluetoothSocket.close();
+                } catch (IOException close) {
+                    Log.d("CONNECTTHREAD", "Could not close connection:" + e.toString());
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public boolean cancel() {
+            try {
+                bluetoothSocket.close();
+            } catch (IOException close) {
+                Log.d("CONNECTTHREAD","Could not close connection:" + close.toString());
+                return false;
+            }
+            return true;
+        }
+    }
+
+    public static class ServerConnectThread extends Thread {
+        private BluetoothSocket bluetoothSocket;
+
+        public ServerConnectThread() { }
+
+        public void acceptConnect(BluetoothAdapter bluetoothAdapter, UUID uuid) {
+            BluetoothServerSocket temp = null;
+
+            try {
+                temp = bluetoothAdapter.listenUsingRfcommWithServiceRecord("Service_Name", uuid);
+            } catch (IOException e) {
+                Log.d("SERVERCONNECT", "Could not get a BluetoothServerSocket:" + e.toString());
+            }
+            while (true) {
+                try {
+                    if (temp != null) {
+                        bluetoothSocket = temp.accept();
+                    }
+                    else {
+                        Log.d("SERVERCONNECT", "temp is null");
+                    }
+                } catch (IOException e) {
+                    Log.d("SERVERCONNECT", "Could not accept an incoming connection.");
+                    break;
+                }
+                if (bluetoothSocket != null) {
+                    try {
+                        temp.close();
+                    } catch (IOException e) {
+                        Log.d("SERVERCONNECT", "Could not close ServerSocket:" + e.toString());
+                    }
+                    break;
+                }
+            }
+        }
+
+        public void closeConnect() {
+            try {
+                bluetoothSocket.close();
+            } catch (IOException e) {
+
+            }
+        }
+    }
+
+    public static class ManageConnectThread extends Thread {
+        public ManageConnectThread() { }
+
+        public void sendData(BluetoothSocket bluetoothSocket, int data) throws IOException {
+            ByteArrayOutputStream output = new ByteArrayOutputStream(4);
         }
     }
 }
