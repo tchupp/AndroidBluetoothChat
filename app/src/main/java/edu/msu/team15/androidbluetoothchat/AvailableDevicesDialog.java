@@ -79,7 +79,7 @@ public class AvailableDevicesDialog extends DialogFragment {
 
 
 
-                connectThread.connect();
+                //connectThread.connect();
 
             }
         });
