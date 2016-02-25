@@ -1,6 +1,7 @@
 package edu.msu.team15.androidbluetoothchat;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -32,7 +33,6 @@ public class AvailableDevicesDialog extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
         builder.setTitle("Scanning for devices");
-        builder.setCancelable(false);
 
         // Get the layout inflater
         LayoutInflater inflater = getActivity().getLayoutInflater();
@@ -50,10 +50,11 @@ public class AvailableDevicesDialog extends DialogFragment {
                     }
                 });
 
-        AlertDialog dialog = builder.create();
+        final AlertDialog dialog = builder.create();
 
         ListView list = (ListView) view.findViewById(R.id.listDevices);
 
+        bluetoothAdapter.startDiscovery();
         final Cloud.AvailableDeviceAdapter adapter = new Cloud.AvailableDeviceAdapter(list, bluetoothAdapter);
         availableDeviceReceiver = new Cloud.AvailableDeviceReceiver(adapter);
 
@@ -71,9 +72,13 @@ public class AvailableDevicesDialog extends DialogFragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 bluetoothAdapter.cancelDiscovery();
 
-                // TODO close dialog
-                // TODO connect to device
-                BluetoothDevice device = adapter.getDevice(position);
+                dialog.dismiss();
+
+                Activity activity = getActivity();
+                if (activity instanceof MainActivity) {
+                    BluetoothDevice device = adapter.getDevice(position);
+                    ((MainActivity) activity).connect(device);
+                }
             }
         });
 
