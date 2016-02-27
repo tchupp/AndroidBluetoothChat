@@ -173,7 +173,6 @@ public class Cloud {
 
         public synchronized void start() {
             closeConnectThread();
-
             closeConnectedThread();
 
             setState(STATE_LISTEN, "Unknown", "Unknown");
@@ -206,7 +205,9 @@ public class Cloud {
 
             this.connectedThread = new ConnectedThread(bluetoothSocket, this);
             this.connectedThread.start();
+
             this.context.update(this.currentState, bluetoothDevice.getName(), bluetoothDevice.getAddress());
+            this.context.toast("Connected to " + bluetoothDevice.getAddress());
 
             setState(STATE_CONNECTED, bluetoothDevice.getName(), bluetoothDevice.getAddress());
         }
@@ -243,8 +244,6 @@ public class Cloud {
 
         private synchronized void setState(int state, String deviceName, String deviceAddress) {
             Log.i("ABC", "set state to " + state);
-            //TODO: don't leave this here
-            BluetoothDevice bluetoothDevice = null;
 
             this.currentState = state;
             this.context.update(this.currentState, deviceName, deviceAddress);
@@ -400,18 +399,17 @@ public class Cloud {
         @Override
         public void run() {
             Log.i("ABC", "ConnectedThread started");
-            byte[] buffer = new byte[64];
+            byte[] buffer = new byte[1024];
             int bytes;
 
             while (true) {
                 try {
-                    this.inputStream = this.bluetoothSocket.getInputStream();
-                    this.outputStream = this.bluetoothSocket.getOutputStream();
-
                     Log.d("ABC", "Socket connected: " + this.bluetoothSocket.isConnected());
+
+                    this.inputStream = this.bluetoothSocket.getInputStream();
                     bytes = this.inputStream.read(buffer);
 
-                    this.chatService.messageReceived(new String(buffer, StandardCharsets.UTF_8));
+                    this.chatService.messageReceived(new String(buffer, 0, bytes, StandardCharsets.UTF_8));
                 } catch (IOException e) {
                     // TODO remove print stack
                     e.printStackTrace();
@@ -435,6 +433,7 @@ public class Cloud {
 
         public void write(byte[] message) {
             try {
+                this.outputStream = this.bluetoothSocket.getOutputStream();
                 this.outputStream.write(message);
             } catch (IOException e) {
                 // TODO remove print stack
