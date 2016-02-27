@@ -176,7 +176,7 @@ public class Cloud {
 
             closeConnectedThread();
 
-            setState(STATE_LISTEN);
+            setState(STATE_LISTEN, "Unknown", "Unknown");
 
             if (this.acceptThread == null) {
                 this.acceptThread = new AcceptThread(this.bluetoothAdapter, this);
@@ -184,8 +184,8 @@ public class Cloud {
             }
         }
 
-        public synchronized void connect(BluetoothDevice device) {
-            Log.i("ABC", "Connect to " + device.getAddress());
+        public synchronized void connect(BluetoothDevice bluetoothDevice) {
+            Log.i("ABC", "Connect to " + bluetoothDevice.getAddress());
 
             if (this.currentState == STATE_CONNECTING) {
                 closeConnectThread();
@@ -193,9 +193,9 @@ public class Cloud {
 
             closeConnectedThread();
 
-            this.connectThread = new ConnectThread(device, this);
+            this.connectThread = new ConnectThread(bluetoothDevice, this);
             this.connectThread.start();
-            setState(STATE_CONNECTING);
+            setState(STATE_CONNECTING, bluetoothDevice.getName(), bluetoothDevice.getAddress());
         }
 
         public synchronized void connected(BluetoothSocket bluetoothSocket, BluetoothDevice bluetoothDevice) {
@@ -206,9 +206,9 @@ public class Cloud {
 
             this.connectedThread = new ConnectedThread(bluetoothSocket, this);
             this.connectedThread.start();
-            this.context.update(this.currentState);
+            this.context.update(this.currentState, bluetoothDevice.getName(), bluetoothDevice.getAddress());
 
-            setState(STATE_CONNECTED);
+            setState(STATE_CONNECTED, bluetoothDevice.getName(), bluetoothDevice.getAddress());
         }
 
         public void messageReceived(String message) {
@@ -241,11 +241,13 @@ public class Cloud {
             return this.currentState;
         }
 
-        private synchronized void setState(int state) {
+        private synchronized void setState(int state, String deviceName, String deviceAddress) {
             Log.i("ABC", "set state to " + state);
+            //TODO: don't leave this here
+            BluetoothDevice bluetoothDevice = null;
 
             this.currentState = state;
-            this.context.update(this.currentState);
+            this.context.update(this.currentState, deviceName, deviceAddress);
         }
 
         private void closeConnectThread() {

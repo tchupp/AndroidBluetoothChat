@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
@@ -31,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
     public String getMessageSent() {
         return messageSent;
     }
+
+    public int currentState;
 
     public void setBluetoothStatus(String bluetoothStatus) {
         this.bluetoothStatus = bluetoothStatus;
@@ -87,8 +90,32 @@ public class MainActivity extends AppCompatActivity {
         this.chatService.connect(device);
     }
 
-    public void update(int state) {
-        //TODO update UI
+    public void update(final int state, final String deviceName, final String deviceAddress) {
+        this.messageBox.post(new Runnable() {
+            @Override
+            public void run() {
+                TextView textStatus = (TextView) findViewById(R.id.textStatus);
+                switch(state) {
+                    case Cloud.ChatService.STATE_NONE:
+                        textStatus.setText("None");
+                        break;
+                    case Cloud.ChatService.STATE_LISTEN:
+                        textStatus.setText("Listening");
+                        break;
+                    case Cloud.ChatService.STATE_CONNECTING:
+                        textStatus.setText("Connecting");
+                        break;
+                    case Cloud.ChatService.STATE_CONNECTED:
+                        textStatus.setText("Connected");
+                        break;
+                }
+
+                TextView textName = (TextView) findViewById(R.id.textName);
+                TextView textAddress = (TextView) findViewById(R.id.textAddress);
+                textName.setText(deviceName);
+                textAddress.setText(deviceAddress);
+            }
+        });
     }
 
     public void toast(final String message) {
