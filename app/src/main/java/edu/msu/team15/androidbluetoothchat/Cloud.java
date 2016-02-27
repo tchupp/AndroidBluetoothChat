@@ -439,14 +439,6 @@ public class Cloud {
                 // TODO remove print stack
                 e.printStackTrace();
             }
-
-            try {
-                if (this.outputStream != null) {
-                    this.outputStream.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
 
         public void cancel() {
