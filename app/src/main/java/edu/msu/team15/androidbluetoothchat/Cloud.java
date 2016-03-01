@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -409,7 +410,9 @@ public class Cloud {
                     this.inputStream = this.bluetoothSocket.getInputStream();
                     bytes = this.inputStream.read(buffer);
 
-                    this.chatService.messageReceived(new String(buffer, 0, bytes, StandardCharsets.UTF_8));
+                    String message = new String(buffer, 0, bytes, StandardCharsets.UTF_8);
+                    Log.i("ABC Message Received", message);
+                    this.chatService.messageReceived(message);
                 } catch (IOException e) {
                     // TODO remove print stack
                     e.printStackTrace();
@@ -433,8 +436,13 @@ public class Cloud {
 
         public void write(byte[] message) {
             try {
+//                this.outputStream.write(message);
                 this.outputStream = this.bluetoothSocket.getOutputStream();
-                this.outputStream.write(message);
+                char[] rotateRightCommand = {0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0xf4, 0xf7};
+//                char[] stopRotationCommand = {0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0x01, 0xf4, 0xf7}; // NOT ACTUAL STOP COMMAND
+                for (char a : rotateRightCommand) {
+                    new DataOutputStream(this.outputStream).writeByte(a);
+                }
             } catch (IOException e) {
                 // TODO remove print stack
                 e.printStackTrace();
